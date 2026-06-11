@@ -1,11 +1,17 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import HomeScreen from './src/screens/HomeScreen';
 
+// Point d'entrée de l'application.
+// Pour l'instant un seul écran ; la navigation sera ajoutée ensuite.
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <View style={styles.header}>
+        <Text style={styles.title}>Pokédex</Text>
+      </View>
+      <HomeScreen />
+      <StatusBar style="light" />
     </View>
   );
 }
@@ -13,8 +19,16 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+  },
+  header: {
+    backgroundColor: '#e3350d',
+    paddingTop: 55,
+    paddingBottom: 14,
     alignItems: 'center',
-    justifyContent: 'center',
+  },
+  title: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: 'bold',
   },
 });
