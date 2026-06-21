@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,6 +10,7 @@ import {
 } from 'react-native';
 import { fetchPokemonDetails, getPokemonImageUrl } from '../api/pokeapi';
 import TypeBadge from '../components/TypeBadge';
+import { useFavorites } from '../context/FavoritesContext';
 
 // Traduction des noms de statistiques renvoyés par l'API
 const STAT_NAMES_FR = {
@@ -25,7 +27,11 @@ const STAT_MAX = 255;
 
 export default function DetailScreen({ route }) {
   // Les paramètres passés par navigation.navigate('Detail', { id, name })
-  const { id } = route.params;
+  const { id, name } = route.params;
+
+  // On récupère les fonctions de favoris depuis le Context partagé
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorite = isFavorite(id);
 
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -73,6 +79,23 @@ export default function DetailScreen({ route }) {
       />
       <Text style={styles.number}>N°{String(details.id).padStart(3, '0')}</Text>
       <Text style={styles.name}>{details.name}</Text>
+
+      {/* --- Bouton favori --- */}
+      <Pressable
+        onPress={() => toggleFavorite({ id: details.id, name: details.name })}
+        style={({ pressed }) => [
+          styles.favButton,
+          favorite && styles.favButtonActive,
+          pressed && styles.favButtonPressed,
+        ]}
+      >
+        <Text style={[styles.favIcon, favorite && styles.favTextActive]}>
+          {favorite ? '★' : '☆'}
+        </Text>
+        <Text style={[styles.favText, favorite && styles.favTextActive]}>
+          {favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+        </Text>
+      </Pressable>
 
       {/* --- Types --- */}
       <View style={styles.typesRow}>
@@ -151,6 +174,36 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'capitalize',
     color: '#333',
+  },
+  favButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#e3350d',
+    backgroundColor: '#fff',
+  },
+  favButtonActive: {
+    backgroundColor: '#e3350d',
+  },
+  favButtonPressed: {
+    opacity: 0.7,
+  },
+  favIcon: {
+    fontSize: 18,
+    color: '#e3350d',
+    marginRight: 8,
+  },
+  favText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#e3350d',
+  },
+  favTextActive: {
+    color: '#fff',
   },
   typesRow: {
     flexDirection: 'row',

@@ -1,18 +1,24 @@
-import { Image, Pressable, StyleSheet, Text } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { getPokemonImageUrl } from '../api/pokeapi';
 
 /**
  * Carte réutilisable affichant un Pokémon (image + numéro + nom).
  * Props :
- *  - pokemon : { id, name }
- *  - onPress : fonction appelée au clic (servira pour la navigation)
+ *  - pokemon    : { id, name }
+ *  - onPress    : fonction appelée au clic (navigation)
+ *  - isFavorite : affiche une étoile dans le coin si true
  */
-export default function PokemonCard({ pokemon, onPress }) {
+export default function PokemonCard({ pokemon, onPress, isFavorite }) {
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       onPress={onPress}
     >
+      {isFavorite && (
+        <View style={styles.favBadge}>
+          <Text style={styles.favBadgeIcon}>★</Text>
+        </View>
+      )}
       <Image
         source={{ uri: getPokemonImageUrl(pokemon.id) }}
         style={styles.image}
@@ -41,6 +47,16 @@ const styles = StyleSheet.create({
   },
   cardPressed: {
     opacity: 0.7,
+  },
+  favBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 1,
+  },
+  favBadgeIcon: {
+    fontSize: 18,
+    color: '#f1c40f',
   },
   image: {
     width: 90,
