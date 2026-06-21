@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -6,8 +6,13 @@ import {
   Text,
   View,
 } from 'react-native';
-import { fetchPokemonList, getPokemonId } from '../api/pokeapi';
+import {
+  fetchAllPokemonNames,
+  fetchPokemonList,
+  getPokemonId,
+} from '../api/pokeapi';
 import PokemonCard from '../components/PokemonCard';
+import SearchBar from '../components/SearchBar';
 
 const PAGE_SIZE = 20;
 
@@ -25,6 +30,13 @@ export default function HomeScreen({ navigation }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
+
+  // --- État de la recherche ---
+  // query       : le texte tapé dans la barre de recherche
+  // allPokemons : la liste complète des noms (chargée une fois) pour
+  //               pouvoir chercher parmi TOUS les Pokémon
+  const [query, setQuery] = useState('');
+  const [allPokemons, setAllPokemons] = useState([]);
 
   // Transforme les résultats bruts { name, url } en { id, name }
   const mapResults = (results) =>
@@ -68,10 +80,37 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  // Charge en arrière-plan la liste complète des noms (pour la recherche)
+  const loadAllNames = async () => {
+    try {
+      const data = await fetchAllPokemonNames();
+      setAllPokemons(mapResults(data.results));
+    } catch (e) {
+      // Pas bloquant : si ça échoue, la recherche filtrera la liste déjà chargée
+    }
+  };
+
   // useEffect avec [] : s'exécute UNE seule fois, au montage de l'écran
   useEffect(() => {
     loadPokemons();
+    loadAllNames();
   }, []);
+
+  // Mode recherche actif dès qu'on a tapé quelque chose
+  const isSearching = query.trim().length > 0;
+
+  // Données affichées :
+  //  - en recherche : on filtre la liste complète par nom
+  //  - sinon        : la liste paginée habituelle
+  // useMemo évite de refiltrer à chaque rendu : le calcul n'est refait
+  // que si query, allPokemons ou pokemons changent réellement.
+  const displayedData = useMemo(() => {
+    if (!isSearching) return pokemons;
+    const q = query.trim().toLowerCase();
+    // Repli sur la liste paginée si la liste complète n'est pas encore prête
+    const source = allPokemons.length > 0 ? allPokemons : pokemons;
+    return source.filter((p) => p.name.includes(q));
+  }, [isSearching, query, allPokemons, pokemons]);
 
   // --- Rendu conditionnel : chargement / erreur / succès ---
   if (loading) {
@@ -93,8 +132,13 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <SearchBar
+        value={query}
+        onChangeText={setQuery}
+        placeholder="Rechercher un Pokémon..."
+      />
       <FlatList
-        data={pokemons}
+        data={displayedData}
         keyExtractor={(item) => String(item.id)}
         numColumns={2}
         contentContainerStyle={styles.list}
@@ -105,16 +149,22 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Detail', { id: item.id, name: item.name })}
           />
         )}
-        // --- Scroll infini ---
-        onEndReached={loadMorePokemons}
+        // --- Scroll infini (désactivé pendant une recherche) ---
+        onEndReached={isSearching ? null : loadMorePokemons}
         onEndReachedThreshold={0.5}
         ListFooterComponent={
-          loadingMore ? (
+          loadingMore && !isSearching ? (
             <ActivityIndicator
               size="small"
               color="#e3350d"
               style={styles.footerLoader}
             />
+          ) : null
+        }
+        // Message affiché quand la recherche ne donne aucun résultat
+        ListEmptyComponent={
+          isSearching ? (
+            <Text style={styles.emptyText}>Aucun Pokémon trouvé.</Text>
           ) : null
         }
       />
@@ -147,5 +197,11 @@ const styles = StyleSheet.create({
   },
   footerLoader: {
     marginVertical: 16,
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#888',
+    fontSize: 16,
+    marginTop: 40,
   },
 });

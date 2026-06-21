@@ -17,6 +17,20 @@ export async function fetchPokemonList(offset = 0, limit = 20) {
 }
 
 /**
+ * Récupère la liste COMPLÈTE des noms de Pokémon en un seul appel.
+ * Utilisé par la recherche : on télécharge tous les noms une fois
+ * (données légères : juste name + url) pour pouvoir filtrer sur
+ * l'ensemble des Pokémon, et pas seulement ceux déjà affichés.
+ */
+export async function fetchAllPokemonNames() {
+  const response = await fetch(`${BASE_URL}/pokemon?limit=100000&offset=0`);
+  if (!response.ok) {
+    throw new Error(`Erreur HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
  * Récupère les détails complets d'un Pokémon (types, stats, taille, poids...).
  * Accepte un id (25) ou un nom ("pikachu").
  */
