@@ -12,6 +12,7 @@ import {
   fetchPokemonList,
   getPokemonId,
 } from '../api/pokeapi';
+import ErrorView from '../components/ErrorView';
 import PokemonCard from '../components/PokemonCard';
 import SearchBar from '../components/SearchBar';
 import { useFavorites } from '../context/FavoritesContext';
@@ -143,12 +144,9 @@ export default function HomeScreen({ navigation }) {
     );
   }
 
+  // En cas d'erreur au chargement initial : message + bouton réessayer
   if (error) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
+    return <ErrorView message={error} onRetry={loadPokemons} />;
   }
 
   return (
@@ -252,11 +250,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     color: '#666',
-  },
-  errorText: {
-    textAlign: 'center',
-    color: '#c0392b',
-    fontSize: 16,
   },
   footerLoader: {
     marginVertical: 16,

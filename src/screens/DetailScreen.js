@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { fetchPokemonDetails, getPokemonImageUrl } from '../api/pokeapi';
+import ErrorView from '../components/ErrorView';
 import TypeBadge from '../components/TypeBadge';
 import { useFavorites } from '../context/FavoritesContext';
 
@@ -27,7 +28,7 @@ const STAT_MAX = 255;
 
 export default function DetailScreen({ route }) {
   // Les paramètres passés par navigation.navigate('Detail', { id, name })
-  const { id, name } = route.params;
+  const { id } = route.params;
 
   // On récupère les fonctions de favoris depuis le Context partagé
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -37,19 +38,23 @@ export default function DetailScreen({ route }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Définie ici (et plus dans le useEffect) pour pouvoir la réutiliser
+  // comme fonction "Réessayer" en cas d'erreur.
+  const loadDetails = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchPokemonDetails(id);
+      setDetails(data);
+    } catch (e) {
+      setError('Impossible de charger ce Pokémon.\nVérifie ta connexion internet.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Recharge dès que l'id change (ex : navigation vers un autre Pokémon)
   useEffect(() => {
-    const loadDetails = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchPokemonDetails(id);
-        setDetails(data);
-      } catch (e) {
-        setError('Impossible de charger ce Pokémon.\nVérifie ta connexion internet.');
-      } finally {
-        setLoading(false);
-      }
-    };
     loadDetails();
   }, [id]);
 
@@ -61,12 +66,9 @@ export default function DetailScreen({ route }) {
     );
   }
 
+  // En cas d'erreur : message + bouton réessayer
   if (error) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
+    return <ErrorView message={error} onRetry={loadDetails} />;
   }
 
   return (
@@ -154,11 +156,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-  },
-  errorText: {
-    textAlign: 'center',
-    color: '#c0392b',
-    fontSize: 16,
   },
   image: {
     width: 200,
