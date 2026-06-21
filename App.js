@@ -1,34 +1,41 @@
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
 import HomeScreen from './src/screens/HomeScreen';
+import DetailScreen from './src/screens/DetailScreen';
 
-// Point d'entrée de l'application.
-// Pour l'instant un seul écran ; la navigation sera ajoutée ensuite.
+// La "pile" d'écrans : on empile l'écran détail par-dessus la liste,
+// le bouton retour le dépile.
+const Stack = createNativeStackNavigator();
+
 export default function App() {
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Pokédex</Text>
-      </View>
-      <HomeScreen />
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          // Style commun à tous les headers
+          headerStyle: { backgroundColor: '#e3350d' },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: 'bold' },
+        }}
+      >
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{ title: 'Pokédex' }}
+        />
+        <Stack.Screen
+          name="Detail"
+          component={DetailScreen}
+          // Le titre du header = le nom du Pokémon cliqué (passé en paramètre)
+          options={({ route }) => ({
+            title:
+              route.params.name.charAt(0).toUpperCase() +
+              route.params.name.slice(1),
+          })}
+        />
+      </Stack.Navigator>
       <StatusBar style="light" />
-    </View>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    backgroundColor: '#e3350d',
-    paddingTop: 55,
-    paddingBottom: 14,
-    alignItems: 'center',
-  },
-  title: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-});

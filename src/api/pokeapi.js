@@ -17,6 +17,18 @@ export async function fetchPokemonList(offset = 0, limit = 20) {
 }
 
 /**
+ * Récupère les détails complets d'un Pokémon (types, stats, taille, poids...).
+ * Accepte un id (25) ou un nom ("pikachu").
+ */
+export async function fetchPokemonDetails(idOrName) {
+  const response = await fetch(`${BASE_URL}/pokemon/${idOrName}`);
+  if (!response.ok) {
+    throw new Error(`Erreur HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
  * L'endpoint liste ne donne pas l'id du Pokémon directement,
  * mais il se trouve à la fin de son URL :
  * "https://pokeapi.co/api/v2/pokemon/25/" -> 25

@@ -11,7 +11,9 @@ import PokemonCard from '../components/PokemonCard';
 
 const PAGE_SIZE = 20;
 
-export default function HomeScreen() {
+// React Navigation passe automatiquement la prop "navigation"
+// à tous les écrans déclarés dans le Stack.Navigator
+export default function HomeScreen({ navigation }) {
   // --- État de l'écran ---
   // pokemons    : les données affichées dans la liste
   // loading     : vrai pendant le chargement initial (affiche le spinner)
@@ -96,7 +98,13 @@ export default function HomeScreen() {
         keyExtractor={(item) => String(item.id)}
         numColumns={2}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => <PokemonCard pokemon={item} />}
+        renderItem={({ item }) => (
+          <PokemonCard
+            pokemon={item}
+            // Au clic : on empile l'écran Detail en lui passant id et name
+            onPress={() => navigation.navigate('Detail', { id: item.id, name: item.name })}
+          />
+        )}
         // --- Scroll infini ---
         onEndReached={loadMorePokemons}
         onEndReachedThreshold={0.5}
